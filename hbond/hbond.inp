@@ -1,0 +1,244 @@
+* CHARMM c33a1 Testcase hqbm_single.inp
+* hqbm tests on ci2 - single copy versions
+*
+!Calculates H-bond distances in DNA
+
+! Read in the parameter and topology files.
+set a test_top.rtf
+set b test_par.prm
+set c t7rnap_100bp          ! target
+set length  100
+set startA  1
+set segida DNAA
+set segidb DNAB
+
+! Read inputi files
+open unit 1 form read name @a
+read rtf card unit 1
+close unit 1
+
+open unit 1 form read name @b
+read para card unit 1
+close unit 1
+
+open unit 2 read card name @c_charmm.psf
+read psf card unit 2
+close unit 2
+
+! Read coordinates of the reference configuration
+!open unit 2 read card name @c.crd
+!coor read card unit 2
+!close unit 2
+
+open unit 51 read unform name ../100_@mns.dcd
+!#open unit 51 read unform name ../100_TOTAL_103ns.dcd
+!traj firstu 51 nunit 1 begin 50000 stop 5000000 skip 50000
+!traj firstu 51 nunit 1 begin @begin stop @stop skip 500000
+traj firstu 51 nunit 1 skip 500000
+!#traj firstu 51 nunit 1 skip 1 
+
+open write unit 21 form name hbond_@mns.dat
+!#open write unit 21 form name hbond.dat
+
+label new_traj
+traj read 
+
+calc nbase = @startA - 1
+label loop00
+increment nbase by 1
+if @nbase .gt. @length goto new_traj
+define thisresidue select resi @nbase end
+if ?selresn eq CYT goto loop1
+if ?selresn eq GUA goto loop2
+if ?selresn eq ADE goto loop3
+if ?selresn eq THY goto loop4
+
+label write
+write title unit 21
+* @dist
+*
+goto loop00
+
+label frames
+!incr t by 1
+!if t lt @frames  goto new_traj
+stop
+ 
+
+label loop1
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! For CYT --- GUA              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+calc nbasecomp = @length - @nbase +1
+ 
+set strandA51H1 dnae  @nbase O2     ! seg dnaa, resi  1, res CYT
+set strandA51H2 dnae  @nbase N3
+set strandA51H3 dnae  @nbase N4
+set strandB31H1 dnbe  @nbasecomp N2     ! seg dnab, resi 12, res GUA
+set strandB31H2 dnbe  @nbasecomp N1
+set strandB31H3 dnbe  @nbasecomp O6
+
+define strandA51H1  sele segid @segida .and. thisresidue .and. type O2 end
+define strandA51H2  sele segid @segida .and. thisresidue .and. type N3 end
+define strandA51H3  sele segid @segida .and. thisresidue .and. type N4 end
+define strandB31H1  sele segid @segidb .and. resid @nbasecomp .and. type N2 end
+define strandB31H2  sele segid @segidb .and. resid @nbasecomp .and. type N1 end
+define strandB31H3  sele segid @segidb .and. resid @nbasecomp .and. type O6 end
+coor axis sele strandA51H1  end sele strandB31H1  end
+set dist1 ?raxi
+coor axis sele strandA51H2  end sele strandB31H2  end
+set dist2 ?raxi
+coor axis sele strandA51H3  end sele strandB31H3  end
+set dist3 ?raxi
+
+calc dist = (@dist1+@dist2+@dist3)/3 
+ 
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C4 .or.  -
+!segid DNAA .and. resid @nbase .and. type N4 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type O6 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C6) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C4 .or.  -
+!segid DNAA .and. resid @nbase .and. type N3 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N1 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C2) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C2 .or.  -
+!segid DNAA .and. resid @nbase .and. type O2 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N2 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C2) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+ 
+!PRINT CONS
+ 
+goto write
+ 
+
+
+label loop2
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! For GUA --- CYT              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+calc nbasecomp = @length - @nbase +1
+ 
+set strandA51H1 dnae  @nbase N2     ! seg dnaa, resi  1, res GUA
+set strandA51H2 dnae  @nbase N1
+set strandA51H3 dnae  @nbase O6
+set strandB31H1 dnbe  @nbasecomp O2     ! seg dnab, resi 12, res CYT
+set strandB31H2 dnbe  @nbasecomp N3
+set strandB31H3 dnbe  @nbasecomp N4
+
+define strandA51H1  sele segid @segida .and. thisresidue .and. type N2 end
+define strandA51H2  sele segid @segida .and. thisresidue .and. type N1 end
+define strandA51H3  sele segid @segida .and. thisresidue .and. type O6 end
+define strandB31H1  sele segid @segidb .and. resid @nbasecomp .and. type O2 end
+define strandB31H2  sele segid @segidb .and. resid @nbasecomp .and. type N3 end
+define strandB31H3  sele segid @segidb .and. resid @nbasecomp .and. type N4 end
+coor axis sele strandA51H1  end sele strandB31H1  end
+set dist1 ?raxi
+coor axis sele strandA51H2  end sele strandB31H2  end
+set dist2 ?raxi
+coor axis sele strandA51H3  end sele strandB31H3  end
+set dist3 ?raxi
+calc dist = (@dist1+@dist2+@dist3)/3
+ 
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C6 .or.  -
+!segid DNAA .and. resid @nbase .and. type O6 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N4 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C4) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C2 .or.  -
+!segid DNAA .and. resid @nbase .and. type N1 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N3 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C4) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C2 .or.  -
+!segid DNAA .and. resid @nbase .and. type N2 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type O2 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C2) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+! 
+!PRINT CONS
+goto write
+
+label loop3
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! For ADE --- THY              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+calc nbasecomp = @length - @nbase +1
+ 
+set strandA31H1 dnae @nbase N1     ! seg dnaa, resi 12, res ADE
+set strandA31H2 dnae @nbase N6
+set strandB51H1 dnbe @nbasecomp N3     ! seg dnab, resi  1, res THY
+set strandB51H2 dnbe @nbasecomp O4
+
+define strandA31H1  sele segid @segida .and. thisresidue .and. type N1 end
+define strandA31H2  sele segid @segida .and. thisresidue .and. type N6 end
+define strandB51H1  sele segid @segidb .and. resid @nbasecomp .and. type N3 end
+define strandB51H2  sele segid @segidb .and. resid @nbasecomp .and. type O4 end
+coor axis sele strandA31H1  end sele strandB51H1  end
+set dist1 ?raxi 
+coor axis sele strandA31H2  end sele strandB51H2  end 
+set dist2 ?raxi 
+!coor dist sele strandA31H2  end sele strandB51H2  end 
+calc dist = (@dist1+@dist2)/2
+ 
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C6 .or.  -
+!segid DNAA .and. resid @nbase .and. type N6 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type O4 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C4) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C6 .or.  -
+!segid DNAA .and. resid @nbase .and. type N1 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N3 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C4) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!PRINT CONS
+ 
+goto write
+
+label loop4
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! For THY --- ADE              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+calc nbasecomp = @length - @nbase +1
+ 
+set strandA51H1 dnae  @nbase N3     ! seg dnbe, resi  1, res THY
+set strandA51H2 dnae  @nbase O4
+set strandB31H1 dnbe  @nbasecomp N1     ! seg dnae, resi 12, res ADE
+set strandB31H2 dnbe  @nbasecomp N6
+
+define strandA51H1  sele segid @segida .and. thisresidue .and. type N3 end
+define strandA51H2  sele segid @segida .and. thisresidue .and. type O4 end
+define strandB31H1  sele segid @segidb .and. resid @nbasecomp .and. type N1 end
+define strandB31H2  sele segid @segidb .and. resid @nbasecomp .and. type N6 end
+coor axis sele strandA51H1  end sele strandB31H1  end
+set dist1 ?raxi
+coor axis sele strandA51H2  end sele strandB31H2  end
+set dist2 ?raxi
+calc dist = (@dist1+@dist2)/2
+ 
+ 
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C4 .or.  -
+!segid DNAA .and. resid @nbase .and. type N3 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N1 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C6) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+!
+!CONS DIHEdral sele (segid DNAA .and. resid @nbase .and. type C4 .or.  -
+!segid DNAA .and. resid @nbase .and. type O4 .or.  -
+!segid DNAB .and. resid @nbasecomp .and. type N6 .or. -
+!segid DNAB .and. resid @nbasecomp .and. type C6) end -
+!FORCe @force2  MIN 0.0 PERIod 0.0 WIDTh 0.0
+! 
+!PRINT CONS
+ 
+ 
+goto write
+
